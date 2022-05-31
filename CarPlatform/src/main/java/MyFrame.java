@@ -25,11 +25,11 @@ import javax.swing.*;
 public class MyFrame extends JFrame {
 	JTabbedPane mainTab = new JTabbedPane(JTabbedPane.TOP);
 
-	CarMakeConfig carMakeConfig = new CarMakeConfig(mainTab);
 	TuningConfig tuningConfig = new TuningConfig(mainTab);
 	ExtraConfig extraConfig = new ExtraConfig(mainTab);
 	InfoConfig infoConfig = new InfoConfig(mainTab);
-	CarConfig carConfig = new CarConfig(mainTab);
+	CarConfig carConfig = new CarConfig(mainTab, tuningConfig, extraConfig);
+	CarMakeConfig carMakeConfig = new CarMakeConfig(mainTab, carConfig, tuningConfig, extraConfig);
 
 	public MyFrame() {
 		this.setSize(1000, 1000);

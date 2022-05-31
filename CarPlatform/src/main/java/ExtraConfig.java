@@ -138,7 +138,7 @@ public class ExtraConfig extends BaseConfig {
         filterPanel.add(logoutButton);
     }
 
-    private void refreshCarCombo(){
+    public void refreshCarCombo(){
         String sql = "select model from car";
         conn = DBConnection.getConnection();
         String item ="";
@@ -282,12 +282,12 @@ public class ExtraConfig extends BaseConfig {
         logoutButton.addActionListener(new LogoutAction());
     }
 
-    private void refreshAll() {
+    public void refreshAll() {
         this.refreshCarCombo();
         this.refreshTable();
     }
 
-    private void refreshTable() {
+    public void refreshTable() {
         conn = DBConnection.getConnection();
 
         try {

@@ -17,6 +17,8 @@ import java.text.SimpleDateFormat;
 
 public class CarConfig extends BaseConfig {
     JTabbedPane mainTab;
+    TuningConfig tuningConfig;
+    ExtraConfig extraConfig;
 
     // Panels
     JPanel mainPanel = new JPanel();
@@ -81,8 +83,10 @@ public class CarConfig extends BaseConfig {
     boolean isAuthorized = false;
     boolean isFormEnabled = false;
 
-    public CarConfig(JTabbedPane mainTab) {
+    public CarConfig(JTabbedPane mainTab,TuningConfig tuningConfig, ExtraConfig extraConfig) {
         this.mainTab = mainTab;
+        this.tuningConfig = tuningConfig;
+        this.extraConfig = extraConfig;
         this.refreshAll();
     }
 
@@ -330,12 +334,16 @@ public class CarConfig extends BaseConfig {
         logoutButton.addActionListener(new LogoutAction());
     }
 
-    private void refreshAll() {
+    public void refreshAll() {
         this.refreshCarMakeCombo();
         this.refreshTable();
+        tuningConfig.refreshTable();
+        tuningConfig.refreshCarCombo();
+        extraConfig.refreshCarCombo();
+        extraConfig.refreshTable();
     }
 
-    private void refreshTable(){
+    public void refreshTable(){
         conn = DBConnection.getConnection();
 
         try {
@@ -355,7 +363,7 @@ public class CarConfig extends BaseConfig {
         }
     }
 
-    private void refreshCarMakeCombo(){
+    public void refreshCarMakeCombo(){
         String sql = "select name from carmake";
         conn = DBConnection.getConnection();
         String item ="";
@@ -583,7 +591,7 @@ public class CarConfig extends BaseConfig {
                 state=conn.prepareStatement(sql);
                 state.setInt(1, selectedId);
                 state.execute();
-                refreshTable();
+                refreshAll();
                 clearForm();
                 selectedId=-1;
             } catch (SQLException e1) {

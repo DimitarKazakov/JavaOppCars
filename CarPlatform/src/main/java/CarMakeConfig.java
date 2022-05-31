@@ -16,6 +16,9 @@ import java.text.SimpleDateFormat;
 
 public class CarMakeConfig extends BaseConfig {
     JTabbedPane mainTab;
+    TuningConfig tuningConfig;
+    ExtraConfig extraConfig;
+    CarConfig carConfig;
 
     // Panels
     JPanel mainPanel = new JPanel();
@@ -67,9 +70,12 @@ public class CarMakeConfig extends BaseConfig {
     int selectedId = -1;
     boolean isAuthorized = false;
 
-    public CarMakeConfig(JTabbedPane mainTab) {
+    public CarMakeConfig(JTabbedPane mainTab, CarConfig carConfig, TuningConfig tuningConfig, ExtraConfig extraConfig) {
         this.mainTab = mainTab;
-        this.refreshTable();
+        this.tuningConfig = tuningConfig;
+        this.extraConfig = extraConfig;
+        this.carConfig = carConfig;
+        this.refreshAll();
     }
 
     public void configureScreen() {
@@ -258,7 +264,19 @@ public class CarMakeConfig extends BaseConfig {
         table.getColumnModel().getColumn(6).setWidth(200);
     }
 
-    private void refreshTable() {
+    public void refreshAll() {
+        this.refreshTable();
+        tuningConfig.refreshTable();
+        tuningConfig.refreshCarCombo();
+
+        carConfig.refreshTable();
+        carConfig.refreshCarMakeCombo();
+
+        extraConfig.refreshCarCombo();
+        extraConfig.refreshTable();
+    }
+
+    public void refreshTable(){
         conn = DBConnection.getConnection();
 
         try {
@@ -356,7 +374,7 @@ public class CarMakeConfig extends BaseConfig {
                 state.setDate(8, new java.sql.Date(new java.util.Date().getTime()));
 
                 state.execute();
-                refreshTable();
+                refreshAll();
                 clearForm();
 
             } catch (SQLException e1) {
@@ -385,7 +403,7 @@ public class CarMakeConfig extends BaseConfig {
                 state.setDate(8, new java.sql.Date(new java.util.Date().getTime()));
 
                 state.execute();
-                refreshTable();
+                refreshAll();
 
             } catch (SQLException e1) {
                 // TODO Auto-generated catch block
@@ -413,7 +431,7 @@ public class CarMakeConfig extends BaseConfig {
                 state.setInt(8, selectedId);
 
                 state.execute();
-                refreshTable();
+                refreshAll();
                 selectedId = -1;
                 clearForm();
 
@@ -438,7 +456,7 @@ public class CarMakeConfig extends BaseConfig {
                 state=conn.prepareStatement(sql);
                 state.setInt(1, selectedId);
                 state.execute();
-                refreshTable();
+                refreshAll();
                 clearForm();
                 selectedId=-1;
             } catch (SQLException e1) {
@@ -570,7 +588,7 @@ public class CarMakeConfig extends BaseConfig {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            refreshTable();
+            refreshAll();
         }
     }
 
