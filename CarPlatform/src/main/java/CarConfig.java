@@ -186,13 +186,13 @@ public class CarConfig extends BaseConfig {
         table.getColumnModel().getColumn(0).setMaxWidth(0);
         table.getColumnModel().getColumn(0).setWidth(0);
 
+        table.getColumnModel().getColumn(11).setMinWidth(0);
+        table.getColumnModel().getColumn(11).setMaxWidth(0);
+        table.getColumnModel().getColumn(11).setWidth(0);
+
         table.getColumnModel().getColumn(12).setMinWidth(0);
         table.getColumnModel().getColumn(12).setMaxWidth(0);
         table.getColumnModel().getColumn(12).setWidth(0);
-
-        table.getColumnModel().getColumn(13).setMinWidth(0);
-        table.getColumnModel().getColumn(13).setMaxWidth(0);
-        table.getColumnModel().getColumn(13).setWidth(0);
 
         isAuthorized = false;
         editButton.setEnabled(false);
@@ -240,9 +240,7 @@ public class CarConfig extends BaseConfig {
 
         table.getColumnModel().getColumn(10).setMinWidth(100);
         table.getColumnModel().getColumn(10).setMaxWidth(100);
-
-        table.getColumnModel().getColumn(11).setMinWidth(100);
-        table.getColumnModel().getColumn(11).setMaxWidth(100);
+        table.getColumnModel().getColumn(10).setWidth(100);
     }
 
     private void enableFields() {
@@ -250,13 +248,13 @@ public class CarConfig extends BaseConfig {
         table.getColumnModel().getColumn(0).setMaxWidth(50);
         table.getColumnModel().getColumn(0).setWidth(50);
 
+        table.getColumnModel().getColumn(11).setMinWidth(120);
+        table.getColumnModel().getColumn(11).setMaxWidth(120);
+        table.getColumnModel().getColumn(11).setWidth(120);
+
         table.getColumnModel().getColumn(12).setMinWidth(120);
         table.getColumnModel().getColumn(12).setMaxWidth(120);
         table.getColumnModel().getColumn(12).setWidth(120);
-
-        table.getColumnModel().getColumn(13).setMinWidth(120);
-        table.getColumnModel().getColumn(13).setMaxWidth(120);
-        table.getColumnModel().getColumn(13).setWidth(120);
 
         isAuthorized = true;
         editButton.setEnabled(true);
@@ -304,9 +302,7 @@ public class CarConfig extends BaseConfig {
 
         table.getColumnModel().getColumn(10).setMinWidth(80);
         table.getColumnModel().getColumn(10).setMaxWidth(80);
-
-        table.getColumnModel().getColumn(11).setMinWidth(80);
-        table.getColumnModel().getColumn(11).setMaxWidth(80);
+        table.getColumnModel().getColumn(10).setWidth(80);
     }
 
     private void configureTablePanel(){
@@ -512,13 +508,14 @@ public class CarConfig extends BaseConfig {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            int carMakeId = getCarMakeId(carMakeCombo.getSelectedItem().toString());
             conn = DBConnection.getConnection();
             String sql = "insert into car(MODEL, CARMAKEID , POWER , DOORS , PRICE , CONSUMPTION , MAXSPEED , COLOR , \"YEAR\" , DESCRIPTION , CREATEDON , LASTMODIFIEDON) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             try {
                 state = conn.prepareStatement(sql);
                 state.setString(1, "Model#" + generateRandomString(5));
-                state.setInt(2, 1);
+                state.setInt(2, carMakeId);
                 state.setInt(3, generateRandomInt(40, 600));
                 state.setInt(4, generateRandomInt(2, 10));
                 state.setDouble(5, generateRandomDouble(100, 100000));
@@ -561,6 +558,7 @@ public class CarConfig extends BaseConfig {
                 state.setDate(9,  new java.sql.Date(yearInput.getDate().getTime()));
                 state.setString(10, descriptionInput.getText());
                 state.setDate(11, new java.sql.Date(new java.util.Date().getTime()));
+                state.setInt(12, selectedId);
 
                 state.execute();
                 refreshAll();
@@ -640,7 +638,7 @@ public class CarConfig extends BaseConfig {
 
             try {
                 state=conn.prepareStatement(sql);
-                state.setString(1, searchByDoorsInput.getText() + "%");
+                state.setString(1, searchByDoorsInput.getText());
                 result=state.executeQuery();
                 table.setModel(new MyModel(result));
                 searchByDoorsInput.setText("");

@@ -415,6 +415,7 @@ public class ExtraConfig extends BaseConfig {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            int carId = getCarId(carCombo.getSelectedItem().toString());
             conn = DBConnection.getConnection();
             String sql = "insert into extra(name, brand, price, description, createdon, lastmodifiedon, carid) values(?,?,?,?,?,?,?)";
 
@@ -426,7 +427,7 @@ public class ExtraConfig extends BaseConfig {
                 state.setString(4, "Help with " + generateRandomString(30));
                 state.setDate(5, new java.sql.Date(new java.util.Date().getTime()));
                 state.setDate(6, new java.sql.Date(new java.util.Date().getTime()));
-                state.setInt(7, 1);
+                state.setInt(7, carId);
 
                 state.execute();
                 refreshAll();

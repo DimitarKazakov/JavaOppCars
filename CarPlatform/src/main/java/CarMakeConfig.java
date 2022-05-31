@@ -429,7 +429,10 @@ public class CarMakeConfig extends BaseConfig {
         @Override
         public void actionPerformed(ActionEvent e) {
             conn=DBConnection.getConnection();
-            String sql="delete from carmake where id=?";
+            String sql = "";
+
+
+            sql="delete from carmake where id=?";
 
             try {
                 state=conn.prepareStatement(sql);

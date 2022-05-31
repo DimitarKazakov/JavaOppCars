@@ -22,14 +22,6 @@ import java.util.Random;
 
 import javax.swing.*;
 
-//TODO write pass to see admin properties -> ID, CreatedOn, LastModifiedOn, Deleted
-// order by dates, names, numbers
-// search by multiple
-// full info with password
-// generate random row and add it
-// change colors
-// make table better with fewer columns
-// check slujebni poleta
 public class MyFrame extends JFrame {
 	Connection conn = null;
 	PreparedStatement state = null;
