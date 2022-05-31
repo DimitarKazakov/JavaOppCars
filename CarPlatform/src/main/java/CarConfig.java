@@ -13,7 +13,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
 
 public class CarConfig extends BaseConfig {
     JTabbedPane mainTab;
@@ -24,8 +24,6 @@ public class CarConfig extends BaseConfig {
 
     JPanel formPanel = new JPanel();
     JPanel filterPanel = new JPanel();
-    JPanel orderPanel = new JPanel();
-    JPanel otherPanel = new JPanel();
 
     JPanel tablePanel = new JPanel();
 
@@ -40,15 +38,11 @@ public class CarConfig extends BaseConfig {
     JLabel colorLabel = new JLabel("Color:");
     JLabel yearLabel = new JLabel("Year:");
     JLabel descriptionLabel = new JLabel("Description:");
-    JLabel extrasLabel = new JLabel("Extras:");
-    JLabel tuningLabel = new JLabel("Tuning:");
 
     // Form Fields
     JTextField modelInput = new JTextField();
     JTextField powerInput = new JTextField();
     JTextField doorsInput = new JTextField();
-    JCheckBox isAutomaticCheckbox = new JCheckBox("Is Automatic");
-    JCheckBox isLeftSteeringCheckbox = new JCheckBox("Is Left Steering");
     JTextField priceInput = new JTextField();
     JTextField consumptionInput = new JTextField();
     JTextField maxSpeedInput = new JTextField();
@@ -56,28 +50,22 @@ public class CarConfig extends BaseConfig {
     JDateChooser yearInput = new JDateChooser();
     JTextField descriptionInput = new JTextField();
     JComboBox<String> carMakeCombo = new JComboBox();
-    JComboBox<String> extraCombo = new JComboBox();
-    JComboBox<String> tuningCombo = new JComboBox();
 
 
     JPasswordField passwordInput = new JPasswordField();
-    JTextField searchByNameInput = new JTextField();
+    JTextField searchByModelInput = new JTextField();
+    JTextField searchByDoorsInput = new JTextField();
 
     // Table
     JTable table= new JTable();
     JScrollPane scroll = new JScrollPane(table);
 
-    JTable tableExtras= new JTable();
-    JScrollPane scrollExtras = new JScrollPane(tableExtras);
-
-    JTable tableTunings = new JTable();
-    JScrollPane scrollTunings = new JScrollPane(tableTunings);
-
     // Buttons
     JButton addButton = new JButton("Add Car");
     JButton deleteButton = new JButton("Delete Car");
     JButton editButton = new JButton("Edit Car");
-    JButton searchByNameButton = new JButton("Search Car By Name");
+    JButton searchByModelButton = new JButton("Search Car By Model");
+    JButton searchByDoorsButton = new JButton("Search Car By Doors");
     JButton refreshButton = new JButton("Refresh");
     JButton addRandomButton = new JButton("Add Random Car");
     JButton orderByCreatedOnButton = new JButton("Order By Created On");
@@ -89,14 +77,23 @@ public class CarConfig extends BaseConfig {
     Connection conn = null;
     PreparedStatement state = null;
     ResultSet result = null;
-    int selectedCarId = -1;
-    int selectedTuningId = -1;
-    int selectedExtraId = -1;
+    int selectedId = -1;
     boolean isAuthorized = false;
+    boolean isFormEnabled = false;
 
     public CarConfig(JTabbedPane mainTab) {
         this.mainTab = mainTab;
         this.refreshAll();
+    }
+
+    private void setDisableForm(){
+        addButton.setEnabled(false);
+        authorizeButton.setEnabled(false);
+    }
+
+    private void setEnableForm(){
+        addButton.setEnabled(true);
+        authorizeButton.setEnabled(true);
     }
 
     public void configureScreen() {
@@ -110,7 +107,6 @@ public class CarConfig extends BaseConfig {
         this.configureTablePanel();
 
         this.configureButtons();
-
         this.addStyles();
     }
 
@@ -118,27 +114,19 @@ public class CarConfig extends BaseConfig {
         functionTab.add("Form", formPanel);
         this.configureFormPanel();
         functionTab.add("Filter", filterPanel);
-        //configure
-        functionTab.add("Order", orderPanel);
-        //configure
-        functionTab.add("Other", otherPanel);
-        //configure
+        this.configureFilterPanel();
     }
 
     private void addStyles() {
         formPanel.setBorder(BorderFactory.createLineBorder(Color.black, 2));
         filterPanel.setBorder(BorderFactory.createLineBorder(Color.black, 2));
-        otherPanel.setBorder(BorderFactory.createLineBorder(Color.black, 2));
-        orderPanel.setBorder(BorderFactory.createLineBorder(Color.black, 2));
         tablePanel.setBorder(BorderFactory.createLineBorder(Color.black, 2));
 
         table.setBorder(BorderFactory.createLineBorder(Color.black, 1));
-        tableExtras.setBorder(BorderFactory.createLineBorder(Color.black, 1));
-        tableTunings.setBorder(BorderFactory.createLineBorder(Color.black, 1));
     }
 
     private void configureFormPanel(){
-        formPanel.setLayout(new GridLayout(8, 4));
+        formPanel.setLayout(new GridLayout(7, 4));
 
         formPanel.add(modelLabel);
         formPanel.add(modelInput);
@@ -160,15 +148,8 @@ public class CarConfig extends BaseConfig {
         formPanel.add(yearLabel);
         formPanel.add(yearInput);
 
-        formPanel.add(isAutomaticCheckbox);
-        formPanel.add(isLeftSteeringCheckbox);
         formPanel.add(descriptionLabel);
         formPanel.add(descriptionInput);
-
-        formPanel.add(extrasLabel);
-        formPanel.add(extraCombo);
-        formPanel.add(tuningLabel);
-        formPanel.add(tuningCombo);
 
         formPanel.add(carMakeLabel);
         formPanel.add(carMakeCombo);
@@ -185,8 +166,11 @@ public class CarConfig extends BaseConfig {
         filterPanel.add(refreshButton);
         filterPanel.add(clearFormButton);
 
-        filterPanel.add(searchByNameButton);
-        filterPanel.add(searchByNameInput);
+        filterPanel.add(searchByModelButton);
+        filterPanel.add(searchByModelInput);
+
+        filterPanel.add(searchByDoorsButton);
+        filterPanel.add(searchByDoorsInput);
 
         filterPanel.add(orderByCreatedOnButton);
         filterPanel.add(orderByLastModifiedOnButton);
@@ -202,13 +186,13 @@ public class CarConfig extends BaseConfig {
         table.getColumnModel().getColumn(0).setMaxWidth(0);
         table.getColumnModel().getColumn(0).setWidth(0);
 
-        table.getColumnModel().getColumn(5).setMinWidth(0);
-        table.getColumnModel().getColumn(5).setMaxWidth(0);
-        table.getColumnModel().getColumn(5).setWidth(0);
+        table.getColumnModel().getColumn(12).setMinWidth(0);
+        table.getColumnModel().getColumn(12).setMaxWidth(0);
+        table.getColumnModel().getColumn(12).setWidth(0);
 
-        table.getColumnModel().getColumn(6).setMinWidth(0);
-        table.getColumnModel().getColumn(6).setMaxWidth(0);
-        table.getColumnModel().getColumn(6).setWidth(0);
+        table.getColumnModel().getColumn(13).setMinWidth(0);
+        table.getColumnModel().getColumn(13).setMaxWidth(0);
+        table.getColumnModel().getColumn(13).setWidth(0);
 
         isAuthorized = false;
         editButton.setEnabled(false);
@@ -218,21 +202,47 @@ public class CarConfig extends BaseConfig {
         authorizeButton.setEnabled(true);
         passwordInput.setEnabled(true);
 
-        table.getColumnModel().getColumn(1).setMinWidth(200);
-        table.getColumnModel().getColumn(1).setMaxWidth(200);
-        table.getColumnModel().getColumn(1).setWidth(200);
+        table.getColumnModel().getColumn(1).setMinWidth(100);
+        table.getColumnModel().getColumn(1).setMaxWidth(100);
+        table.getColumnModel().getColumn(1).setWidth(100);
 
-        table.getColumnModel().getColumn(2).setMinWidth(200);
-        table.getColumnModel().getColumn(2).setMaxWidth(200);
-        table.getColumnModel().getColumn(2).setWidth(200);
+        table.getColumnModel().getColumn(2).setMinWidth(100);
+        table.getColumnModel().getColumn(2).setMaxWidth(100);
+        table.getColumnModel().getColumn(2).setWidth(100);
 
-        table.getColumnModel().getColumn(3).setMinWidth(200);
-        table.getColumnModel().getColumn(3).setMaxWidth(200);
-        table.getColumnModel().getColumn(3).setWidth(200);
+        table.getColumnModel().getColumn(3).setMinWidth(100);
+        table.getColumnModel().getColumn(3).setMaxWidth(100);
+        table.getColumnModel().getColumn(3).setWidth(100);
 
-        table.getColumnModel().getColumn(4).setMinWidth(400);
-        table.getColumnModel().getColumn(4).setMaxWidth(400);
-        table.getColumnModel().getColumn(4).setWidth(400);
+        table.getColumnModel().getColumn(4).setMinWidth(100);
+        table.getColumnModel().getColumn(4).setMaxWidth(100);
+        table.getColumnModel().getColumn(4).setWidth(100);
+
+        table.getColumnModel().getColumn(5).setMinWidth(100);
+        table.getColumnModel().getColumn(5).setMaxWidth(100);
+        table.getColumnModel().getColumn(5).setWidth(100);
+
+        table.getColumnModel().getColumn(6).setMinWidth(100);
+        table.getColumnModel().getColumn(6).setMaxWidth(100);
+        table.getColumnModel().getColumn(6).setWidth(100);
+
+        table.getColumnModel().getColumn(7).setMinWidth(100);
+        table.getColumnModel().getColumn(7).setMaxWidth(100);
+        table.getColumnModel().getColumn(7).setWidth(100);
+
+        table.getColumnModel().getColumn(8).setMinWidth(100);
+        table.getColumnModel().getColumn(8).setMaxWidth(100);
+        table.getColumnModel().getColumn(8).setWidth(100);
+
+        table.getColumnModel().getColumn(9).setMinWidth(100);
+        table.getColumnModel().getColumn(9).setMaxWidth(100);
+        table.getColumnModel().getColumn(9).setWidth(100);
+
+        table.getColumnModel().getColumn(10).setMinWidth(100);
+        table.getColumnModel().getColumn(10).setMaxWidth(100);
+
+        table.getColumnModel().getColumn(11).setMinWidth(100);
+        table.getColumnModel().getColumn(11).setMaxWidth(100);
     }
 
     private void enableFields() {
@@ -240,13 +250,13 @@ public class CarConfig extends BaseConfig {
         table.getColumnModel().getColumn(0).setMaxWidth(50);
         table.getColumnModel().getColumn(0).setWidth(50);
 
-        table.getColumnModel().getColumn(5).setMinWidth(150);
-        table.getColumnModel().getColumn(5).setMaxWidth(150);
-        table.getColumnModel().getColumn(5).setWidth(150);
+        table.getColumnModel().getColumn(12).setMinWidth(120);
+        table.getColumnModel().getColumn(12).setMaxWidth(120);
+        table.getColumnModel().getColumn(12).setWidth(120);
 
-        table.getColumnModel().getColumn(6).setMinWidth(150);
-        table.getColumnModel().getColumn(6).setMaxWidth(150);
-        table.getColumnModel().getColumn(6).setWidth(150);
+        table.getColumnModel().getColumn(13).setMinWidth(120);
+        table.getColumnModel().getColumn(13).setMaxWidth(120);
+        table.getColumnModel().getColumn(13).setWidth(120);
 
         isAuthorized = true;
         editButton.setEnabled(true);
@@ -256,35 +266,52 @@ public class CarConfig extends BaseConfig {
         authorizeButton.setEnabled(false);
         passwordInput.setEnabled(false);
 
-        table.getColumnModel().getColumn(1).setMinWidth(200);
-        table.getColumnModel().getColumn(1).setMaxWidth(200);
-        table.getColumnModel().getColumn(1).setWidth(200);
+        table.getColumnModel().getColumn(1).setMinWidth(80);
+        table.getColumnModel().getColumn(1).setMaxWidth(80);
+        table.getColumnModel().getColumn(1).setWidth(80);
 
-        table.getColumnModel().getColumn(2).setMinWidth(200);
-        table.getColumnModel().getColumn(2).setMaxWidth(200);
-        table.getColumnModel().getColumn(2).setWidth(200);
+        table.getColumnModel().getColumn(2).setMinWidth(80);
+        table.getColumnModel().getColumn(2).setMaxWidth(80);
+        table.getColumnModel().getColumn(2).setWidth(80);
 
-        table.getColumnModel().getColumn(3).setMinWidth(200);
-        table.getColumnModel().getColumn(3).setMaxWidth(200);
-        table.getColumnModel().getColumn(3).setWidth(200);
+        table.getColumnModel().getColumn(3).setMinWidth(80);
+        table.getColumnModel().getColumn(3).setMaxWidth(80);
+        table.getColumnModel().getColumn(3).setWidth(80);
 
-        table.getColumnModel().getColumn(4).setMinWidth(200);
-        table.getColumnModel().getColumn(4).setMaxWidth(200);
-        table.getColumnModel().getColumn(4).setWidth(200);
+        table.getColumnModel().getColumn(4).setMinWidth(80);
+        table.getColumnModel().getColumn(4).setMaxWidth(80);
+        table.getColumnModel().getColumn(4).setWidth(80);
+
+        table.getColumnModel().getColumn(5).setMinWidth(80);
+        table.getColumnModel().getColumn(5).setMaxWidth(80);
+        table.getColumnModel().getColumn(5).setWidth(80);
+
+        table.getColumnModel().getColumn(6).setMinWidth(80);
+        table.getColumnModel().getColumn(6).setMaxWidth(80);
+        table.getColumnModel().getColumn(6).setWidth(80);
+
+        table.getColumnModel().getColumn(7).setMinWidth(80);
+        table.getColumnModel().getColumn(7).setMaxWidth(80);
+        table.getColumnModel().getColumn(7).setWidth(80);
+
+        table.getColumnModel().getColumn(8).setMinWidth(80);
+        table.getColumnModel().getColumn(8).setMaxWidth(80);
+        table.getColumnModel().getColumn(8).setWidth(80);
+
+        table.getColumnModel().getColumn(9).setMinWidth(80);
+        table.getColumnModel().getColumn(9).setMaxWidth(80);
+        table.getColumnModel().getColumn(9).setWidth(80);
+
+        table.getColumnModel().getColumn(10).setMinWidth(80);
+        table.getColumnModel().getColumn(10).setMaxWidth(80);
+
+        table.getColumnModel().getColumn(11).setMinWidth(80);
+        table.getColumnModel().getColumn(11).setMaxWidth(80);
     }
 
     private void configureTablePanel(){
-        tablePanel.setLayout(new GridLayout(3, 1));
-
-        scrollExtras.setPreferredSize(new Dimension(1200, 300));
-        scrollTunings.setPreferredSize(new Dimension(1200, 300));
-        scroll.setPreferredSize(new Dimension(1200, 300));
-
-
-        tablePanel.add(scrollExtras);
-        tablePanel.add(scrollTunings);
+        scroll.setPreferredSize(new Dimension(1200, 900));
         tablePanel.add(scroll);
-
         table.addMouseListener(new MouseAction());
     }
 
@@ -296,7 +323,8 @@ public class CarConfig extends BaseConfig {
         refreshButton.addActionListener(new RefreshAction());
         clearFormButton.addActionListener(new ClearAction());
 
-        searchByNameButton.addActionListener(new SearchByNameAction());
+        searchByModelButton.addActionListener(new SearchByModelAction());
+        searchByDoorsButton.addActionListener(new SearchByDoorsAction());
 
         orderByCreatedOnButton.addActionListener(new OrderByCreatedAction());
         orderByLastModifiedOnButton.addActionListener(new OrderByModifiedAction());
@@ -306,26 +334,18 @@ public class CarConfig extends BaseConfig {
         logoutButton.addActionListener(new LogoutAction());
     }
 
-    private void refreshAll(){
-        this.refreshTable();
+    private void refreshAll() {
         this.refreshCarMakeCombo();
-        this.refreshExtraCombo();
-        this.refreshTuningCombo();
         this.refreshTable();
     }
 
-    private void refreshTable() {
-        this.refreshExtraTable();
-        this.refreshTuningTable();
-    }
-
-    private void refreshTuningTable(){
+    private void refreshTable(){
         conn = DBConnection.getConnection();
 
         try {
-            state = conn.prepareStatement("select id, name, brand, function, description, createdon, lastmodifiedon from tuning");
+            state = conn.prepareStatement("select c.ID, c.MODEL , c2.NAME AS CarMake, c.POWER , c.DOORS , c.PRICE , c.CONSUMPTION , c.MAXSPEED , c.COLOR , c.\"YEAR\" , c.DESCRIPTION, c.CREATEDON , c.LASTMODIFIEDON from car c JOIN CARMAKE c2 ON c.CARMAKEID = c2.ID");
             result = state.executeQuery();
-            tableTunings.setModel(new MyModel(result));
+            table.setModel(new MyModel(result));
             if (!isAuthorized){
                 this.disableFields();
             }
@@ -337,80 +357,6 @@ public class CarConfig extends BaseConfig {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-    }
-
-    private void refreshExtraTable(){
-        conn = DBConnection.getConnection();
-
-        try {
-            state = conn.prepareStatement("select id, name, brand, price, description, createdon, lastmodifiedon from extra");
-            result = state.executeQuery();
-            tableExtras.setModel(new MyModel(result));
-            if (!isAuthorized){
-                this.disableFields();
-            }
-
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    private void refreshExtraCombo(){
-        String sql = "select name, brand from extra";
-        conn = DBConnection.getConnection();
-        ArrayList<Object> items = new ArrayList();
-        String item = "";
-
-        try {
-            state=conn.prepareStatement(sql);
-            result = state.executeQuery();
-            extraCombo.removeAllItems();
-            while(result.next()) {
-                item = result.getObject(1).toString() + " - " + result.getObject(2).toString();
-                items.add(item);
-            }
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        SelectionManager manager = new SelectionManager();
-        MultiRenderer renderer = new MultiRenderer(manager);
-        DefaultComboBoxModel model = new DefaultComboBoxModel(items.toArray());
-        extraCombo = new JComboBox(model);
-        extraCombo.addActionListener(manager);
-        extraCombo.setRenderer(renderer);
-    }
-
-    private void refreshTuningCombo(){
-        String sql = "select name, brand from tuning";
-        conn = DBConnection.getConnection();
-        ArrayList<Object> items = new ArrayList();
-        String item ="";
-
-        try {
-            state=conn.prepareStatement(sql);
-            result = state.executeQuery();
-            tuningCombo.removeAllItems();
-            while(result.next()) {
-                item = result.getObject(1).toString() + " - " + result.getObject(2).toString();
-                items.add(item);
-            }
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        SelectionManager manager = new SelectionManager();
-        MultiRenderer renderer = new MultiRenderer(manager);
-        DefaultComboBoxModel model = new DefaultComboBoxModel(items.toArray());
-        tuningCombo = new JComboBox(model);
-        tuningCombo.addActionListener(manager);
-        tuningCombo.setRenderer(renderer);
     }
 
     private void refreshCarMakeCombo(){
@@ -425,6 +371,12 @@ public class CarConfig extends BaseConfig {
             while(result.next()) {
                 item = result.getObject(1).toString();
                 carMakeCombo.addItem(item);
+                isFormEnabled = true;
+                this.setEnableForm();
+            }
+
+            if (!isFormEnabled){
+                this.setDisableForm();
             }
         } catch (SQLException e) {
             // TODO Auto-generated catch block
@@ -436,21 +388,14 @@ public class CarConfig extends BaseConfig {
         modelInput.setText("");
         powerInput.setText("");
         doorsInput.setText("");
-        isAutomaticCheckbox.setSelected(false);
-        isLeftSteeringCheckbox.setText("");
         priceInput.setText("");
         consumptionInput.setText("");
         maxSpeedInput.setText("");
         colorInput.setText("");
         yearInput.setDate(null);
         descriptionInput.setText("");
-        refreshTuningCombo();
-        refreshExtraCombo();
         refreshCarMakeCombo();
-
-        selectedCarId = -1;
-        selectedTuningId = -1;
-        selectedExtraId = -1;
+        selectedId = -1;
     }
 
     private boolean checkPassword() {
@@ -463,13 +408,23 @@ public class CarConfig extends BaseConfig {
 
         @Override
         public void mouseClicked(MouseEvent e) {
+            int row=table.getSelectedRow();
+            selectedId=Integer.parseInt(table.getValueAt(row, 0).toString());
+            modelInput.setText(table.getValueAt(row, 1).toString());
+            carMakeCombo.setSelectedItem(table.getValueAt(row, 2).toString());
+            powerInput.setText(table.getValueAt(row, 3).toString());
+            doorsInput.setText(table.getValueAt(row, 4).toString());
+            priceInput.setText(table.getValueAt(row, 5).toString());
+            consumptionInput.setText(table.getValueAt(row, 6).toString());
+            maxSpeedInput.setText(table.getValueAt(row, 7).toString());
+            colorInput.setText(table.getValueAt(row, 8).toString());
+            try {
+                yearInput.setDate(new SimpleDateFormat("yyyy-MM-dd").parse(table.getValueAt(row, 9).toString()));
+            }
+            catch (Exception error){
 
-//            int row=table.getSelectedRow();
-//            selectedId=Integer.parseInt(table.getValueAt(row, 0).toString());
-//            nameInput.setText(table.getValueAt(row, 1).toString());
-//            brandInput.setText(table.getValueAt(row, 2).toString());
-//            priceInput.setText(table.getValueAt(row, 3).toString());
-//            descriptionInput.setText(table.getValueAt(row, 4).toString());
+            }
+            descriptionInput.setText(table.getValueAt(row, 10).toString());
         }
 
         @Override
@@ -500,27 +455,57 @@ public class CarConfig extends BaseConfig {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-//            conn = DBConnection.getConnection();
-//            String sql = "insert into extra(name, brand, price, description, createdon, lastmodifiedon) values(?,?,?,?,?,?)";
-//
-//            try {
-//                state = conn.prepareStatement(sql);
-//                state.setString(1, nameInput.getText());
-//                state.setString(2, brandInput.getText());
-//                state.setDouble(3, Double.parseDouble(priceInput.getText()));
-//                state.setString(4, descriptionInput.getText());
-//                state.setDate(5, new java.sql.Date(new java.util.Date().getTime()));
-//                state.setDate(6, new java.sql.Date(new java.util.Date().getTime()));
-//
-//                state.execute();
-//                refreshTable();
-//                clearForm();
-//
-//            } catch (SQLException e1) {
-//                // TODO Auto-generated catch block
-//                e1.printStackTrace();
-//            }
+            int carMakeId = getCarMakeId(carMakeCombo.getSelectedItem().toString());
+
+            conn = DBConnection.getConnection();
+            String sql = "insert into car(MODEL, CARMAKEID , POWER , DOORS , PRICE , CONSUMPTION , MAXSPEED , COLOR , \"YEAR\" , DESCRIPTION , CREATEDON , LASTMODIFIEDON) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            try {
+                state = conn.prepareStatement(sql);
+                state.setString(1, modelInput.getText());
+                state.setInt(2, carMakeId);
+                state.setInt(3, Integer.parseInt(powerInput.getText()));
+                state.setInt(4, Integer.parseInt(doorsInput.getText()));
+                state.setDouble(5, Double.parseDouble(priceInput.getText()));
+                state.setDouble(6, Double.parseDouble(consumptionInput.getText()));
+                state.setInt(7, Integer.parseInt(maxSpeedInput.getText()));
+                state.setString(8, colorInput.getText());
+                state.setDate(9,  new java.sql.Date(yearInput.getDate().getTime()));
+                state.setString(10, descriptionInput.getText());
+                state.setDate(11, new java.sql.Date(new java.util.Date().getTime()));
+                state.setDate(12, new java.sql.Date(new java.util.Date().getTime()));
+
+                state.execute();
+                refreshAll();
+                clearForm();
+
+            } catch (SQLException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
         }
+    }
+
+    private int getCarMakeId(String selectedCarMake) {
+        conn = DBConnection.getConnection();
+        String sql = "select id from carmake where name like ?";
+
+        try {
+            state = conn.prepareStatement(sql);
+            state.setString(1, selectedCarMake);
+
+            result = state.executeQuery();
+            while(result.next()) {
+                String id = result.getObject(1).toString();
+                return Integer.parseInt(id);
+            }
+
+        } catch (SQLException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+        return 0;
     }
 
     private class AddRandomAction implements ActionListener{
@@ -528,19 +513,25 @@ public class CarConfig extends BaseConfig {
         @Override
         public void actionPerformed(ActionEvent e) {
             conn = DBConnection.getConnection();
-            String sql = "insert into extra(name, brand, price, description, createdon, lastmodifiedon) values(?,?,?,?,?,?)";
+            String sql = "insert into car(MODEL, CARMAKEID , POWER , DOORS , PRICE , CONSUMPTION , MAXSPEED , COLOR , \"YEAR\" , DESCRIPTION , CREATEDON , LASTMODIFIEDON) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             try {
                 state = conn.prepareStatement(sql);
-                state.setString(1, "Extra{" + generateRandomString(6) + "}");
-                state.setString(2, "Brand# " + generateRandomString(4));
-                state.setDouble(3, generateRandomDouble(10, 1000));
-                state.setString(4, "Makes it easier to " + generateRandomString(30));
-                state.setDate(5, new java.sql.Date(new java.util.Date().getTime()));
-                state.setDate(6, new java.sql.Date(new java.util.Date().getTime()));
+                state.setString(1, "Model#" + generateRandomString(5));
+                state.setInt(2, 1);
+                state.setInt(3, generateRandomInt(40, 600));
+                state.setInt(4, generateRandomInt(2, 10));
+                state.setDouble(5, generateRandomDouble(100, 100000));
+                state.setDouble(6, generateRandomDouble(2, 40));
+                state.setInt(7,  generateRandomInt(60, 400));
+                state.setString(8, "code#" + generateRandomString(6));
+                state.setDate(9,  new java.sql.Date(new java.util.Date().getTime()));
+                state.setString(10, generateRandomString(50));
+                state.setDate(11, new java.sql.Date(new java.util.Date().getTime()));
+                state.setDate(12, new java.sql.Date(new java.util.Date().getTime()));
 
                 state.execute();
-                refreshTable();
+                refreshAll();
 
             } catch (SQLException e1) {
                 // TODO Auto-generated catch block
@@ -553,27 +544,33 @@ public class CarConfig extends BaseConfig {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-//            conn = DBConnection.getConnection();
-//            String sql = "update extra set name = ?, brand = ?, price = ?, description = ?, lastmodifiedon = ? where id = ?";
-//
-//            try {
-//                state = conn.prepareStatement(sql);
-//                state.setString(1, nameInput.getText());
-//                state.setString(2, brandInput.getText());
-//                state.setDouble(3, Double.parseDouble(priceInput.getText()));
-//                state.setString(4, descriptionInput.getText());
-//                state.setDate(5, new java.sql.Date(new java.util.Date().getTime()));
-//                state.setInt(6, selectedId);
-//
-//                state.execute();
-//                refreshTable();
-//                selectedId = -1;
-//                clearForm();
-//
-//            } catch (SQLException e1) {
-//                // TODO Auto-generated catch block
-//                e1.printStackTrace();
-//            }
+            int carMakeId = getCarMakeId(carMakeCombo.getSelectedItem().toString());
+            conn = DBConnection.getConnection();
+            String sql = "update car set MODEL = ?, CARMAKEID = ?, POWER = ?, DOORS = ?, PRICE = ?, CONSUMPTION = ?, MAXSPEED = ?, COLOR = ?, \"YEAR\" = ?, DESCRIPTION = ? , lastmodifiedon = ? where id = ?";
+
+            try {
+                state = conn.prepareStatement(sql);
+                state.setString(1, modelInput.getText());
+                state.setInt(2, carMakeId);
+                state.setInt(3, Integer.parseInt(powerInput.getText()));
+                state.setInt(4, Integer.parseInt(doorsInput.getText()));
+                state.setDouble(5, Double.parseDouble(priceInput.getText()));
+                state.setDouble(6, Double.parseDouble(consumptionInput.getText()));
+                state.setInt(7, Integer.parseInt(maxSpeedInput.getText()));
+                state.setString(8, colorInput.getText());
+                state.setDate(9,  new java.sql.Date(yearInput.getDate().getTime()));
+                state.setString(10, descriptionInput.getText());
+                state.setDate(11, new java.sql.Date(new java.util.Date().getTime()));
+
+                state.execute();
+                refreshAll();
+                selectedId = -1;
+                clearForm();
+
+            } catch (SQLException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
         }
     }
 
@@ -582,15 +579,15 @@ public class CarConfig extends BaseConfig {
         @Override
         public void actionPerformed(ActionEvent e) {
             conn=DBConnection.getConnection();
-            String sql="delete from extra where id=?";
+            String sql="delete from car where id=?";
 
             try {
                 state=conn.prepareStatement(sql);
-                state.setInt(1, selectedCarId);
+                state.setInt(1, selectedId);
                 state.execute();
                 refreshTable();
                 clearForm();
-                selectedCarId=-1;
+                selectedId=-1;
             } catch (SQLException e1) {
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
@@ -600,23 +597,23 @@ public class CarConfig extends BaseConfig {
 
     }
 
-    private class SearchByNameAction implements ActionListener{
+    private class SearchByModelAction implements ActionListener{
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if(searchByNameInput.getText() == ""){
+            if(searchByModelInput.getText() == ""){
                 return;
             }
 
             conn=DBConnection.getConnection();
-            String sql="select id, name, brand, price, description, createdon, lastmodifiedon from extra where name like ?";
+            String sql="select c.ID, c.MODEL , c2.NAME AS CarMake, c.POWER , c.DOORS , c.PRICE , c.CONSUMPTION , c.MAXSPEED , c.COLOR , c.\"YEAR\" , c.DESCRIPTION, c.CREATEDON , c.LASTMODIFIEDON from car c JOIN CARMAKE c2 ON c.CARMAKEID = c2.ID where c.model like ?";
 
             try {
                 state=conn.prepareStatement(sql);
-                state.setString(1, searchByNameInput.getText() + "%");
+                state.setString(1, searchByModelInput.getText() + "%");
                 result=state.executeQuery();
                 table.setModel(new MyModel(result));
-                searchByNameInput.setText("");
+                searchByModelInput.setText("");
                 if (!isAuthorized){
                     disableFields();
                 }
@@ -630,33 +627,33 @@ public class CarConfig extends BaseConfig {
         }
     }
 
-    private class SearchByBrandAction implements ActionListener{
+    private class SearchByDoorsAction implements ActionListener{
 
         @Override
         public void actionPerformed(ActionEvent e) {
-//            if(searchByBrandInput.getText() == ""){
-//                return;
-//            }
-//
-//            conn=DBConnection.getConnection();
-//            String sql="select id, name, brand, price, description, createdon, lastmodifiedon from extra where brand like ?";
-//
-//            try {
-//                state=conn.prepareStatement(sql);
-//                state.setString(1, searchByBrandInput.getText() + "%");
-//                result=state.executeQuery();
-//                table.setModel(new MyModel(result));
-//                searchByBrandInput.setText("");
-//                if (!isAuthorized){
-//                    disableFields();
-//                }
-//            } catch (SQLException e1) {
-//                // TODO Auto-generated catch block
-//                e1.printStackTrace();
-//            } catch (Exception e1) {
-//                // TODO Auto-generated catch block
-//                e1.printStackTrace();
-//            }
+            if(searchByDoorsInput.getText() == ""){
+                return;
+            }
+
+            conn=DBConnection.getConnection();
+            String sql="select c.ID, c.MODEL , c2.NAME AS CarMake, c.POWER , c.DOORS , c.PRICE , c.CONSUMPTION , c.MAXSPEED , c.COLOR , c.\"YEAR\" , c.DESCRIPTION, c.CREATEDON , c.LASTMODIFIEDON from car c JOIN CARMAKE c2 ON c.CARMAKEID = c2.ID where c.doors = ?";
+
+            try {
+                state=conn.prepareStatement(sql);
+                state.setString(1, searchByDoorsInput.getText() + "%");
+                result=state.executeQuery();
+                table.setModel(new MyModel(result));
+                searchByDoorsInput.setText("");
+                if (!isAuthorized){
+                    disableFields();
+                }
+            } catch (SQLException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            } catch (Exception e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
         }
     }
 
@@ -665,7 +662,7 @@ public class CarConfig extends BaseConfig {
         @Override
         public void actionPerformed(ActionEvent e) {
             conn=DBConnection.getConnection();
-            String sql="select id, name, brand, price, description, createdon, lastmodifiedon from extra order by createdon desc";
+            String sql="select c.ID, c.MODEL , c2.NAME AS CarMake, c.POWER , c.DOORS , c.PRICE , c.CONSUMPTION , c.MAXSPEED , c.COLOR , c.\"YEAR\" , c.DESCRIPTION, c.CREATEDON , c.LASTMODIFIEDON from car c JOIN CARMAKE c2 ON c.CARMAKEID = c2.ID order by c.createdon desc";
 
             try {
                 state=conn.prepareStatement(sql);
@@ -689,7 +686,7 @@ public class CarConfig extends BaseConfig {
         @Override
         public void actionPerformed(ActionEvent e) {
             conn=DBConnection.getConnection();
-            String sql="select id, name, brand, price, description, createdon, lastmodifiedon from extra order by lastmodifiedon desc";
+            String sql="select c.ID, c.MODEL , c2.NAME AS CarMake, c.POWER , c.DOORS , c.PRICE , c.CONSUMPTION , c.MAXSPEED , c.COLOR , c.\"YEAR\" , c.DESCRIPTION, c.CREATEDON , c.LASTMODIFIEDON from car c JOIN CARMAKE c2 ON c.CARMAKEID = c2.ID order by c.lastmodifiedon desc";
 
             try {
                 state=conn.prepareStatement(sql);
@@ -720,7 +717,7 @@ public class CarConfig extends BaseConfig {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            refreshTable();
+            refreshAll();
         }
     }
 
@@ -744,63 +741,9 @@ public class CarConfig extends BaseConfig {
             passwordInput.setText("");
         }
     }
-
-    private class SelectionManager implements ActionListener {
-        JComboBox combo = null;
-        ArrayList<Object> selectedItems = new ArrayList();
-        ArrayList<Object> nonSelectables = new ArrayList();
-
-        public void actionPerformed(ActionEvent e) {
-            if(combo == null) {
-                combo = (JComboBox)e.getSource();
-            }
-            Object item = combo.getSelectedItem();
-            if(selectedItems.contains(item)) {
-                selectedItems.remove(item);
-            } else if(!nonSelectables.contains(item)) {
-                selectedItems.add(item);
-            }
-        }
-
-        public void setNonSelectables(Object... args) {
-            for(int j = 0; j < args.length; j++) {
-                nonSelectables.add(args[j]);
-            }
-        }
-
-        public boolean isSelected(Object item) {
-            return selectedItems.contains(item);
-        }
-    }
-
-    class MultiRenderer extends BasicComboBoxRenderer {
-        SelectionManager selectionManager;
-
-        public MultiRenderer(SelectionManager sm) {
-            selectionManager = sm;
-        }
-
-        public Component getListCellRendererComponent(JList list,
-                                                      Object value,
-                                                      int index,
-                                                      boolean isSelected,
-                                                      boolean cellHasFocus) {
-            if (selectionManager.isSelected(value)) {
-                setBackground(list.getSelectionBackground());
-                setForeground(list.getSelectionForeground());
-            } else {
-                setBackground(list.getBackground());
-                setForeground(list.getForeground());
-            }
-
-            setFont(list.getFont());
-
-            if (value instanceof Icon) {
-                setIcon((Icon)value);
-            } else {
-                setText((value == null) ? "" : value.toString());
-            }
-            return this;
-        }
-    }
 }
+
+
+
+
+

@@ -27,12 +27,14 @@ public class TuningConfig extends  BaseConfig {
     JLabel brandLabel = new JLabel("Brand:");
     JLabel functionLabel = new JLabel("Function:");
     JLabel descriptionLabel = new JLabel("Description:");
+    JLabel carLabel = new JLabel("Car:");
 
     // Form Fields
     JTextField nameInput = new JTextField();
     JTextField brandInput = new JTextField();
     JTextField functionInput = new JTextField();
     JTextField descriptionInput = new JTextField();
+    JComboBox<String> carCombo = new JComboBox();
 
     JPasswordField passwordInput = new JPasswordField();
     JTextField searchByNameInput = new JTextField();
@@ -61,10 +63,11 @@ public class TuningConfig extends  BaseConfig {
     ResultSet result = null;
     int selectedId = -1;
     boolean isAuthorized = false;
+    boolean isFormEnabled = false;
 
     public TuningConfig(JTabbedPane mainTab) {
         this.mainTab = mainTab;
-        this.refreshTable();
+        this.refreshAll();
     }
 
     public void configureScreen() {
@@ -93,7 +96,7 @@ public class TuningConfig extends  BaseConfig {
     }
 
     private void configureFormPanel(){
-        formPanel.setLayout(new GridLayout(6, 2));
+        formPanel.setLayout(new GridLayout(7, 2));
         formPanel.add(nameLabel);
         formPanel.add(nameInput);
 
@@ -105,6 +108,9 @@ public class TuningConfig extends  BaseConfig {
 
         formPanel.add(descriptionLabel);
         formPanel.add(descriptionInput);
+
+        formPanel.add(carLabel);
+        formPanel.add(carCombo);
 
         formPanel.add(addButton);
         formPanel.add(editButton);
@@ -134,18 +140,53 @@ public class TuningConfig extends  BaseConfig {
         filterPanel.add(logoutButton);
     }
 
+    private void refreshCarCombo(){
+        String sql = "select model from car";
+        conn = DBConnection.getConnection();
+        String item ="";
+
+        try {
+            state=conn.prepareStatement(sql);
+            result = state.executeQuery();
+            carCombo.removeAllItems();
+            while(result.next()) {
+                item = result.getObject(1).toString();
+                carCombo.addItem(item);
+                isFormEnabled = true;
+                this.setEnableForm();
+            }
+
+            if (!isFormEnabled){
+                this.setDisableForm();
+            }
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void setDisableForm(){
+        addButton.setEnabled(false);
+        authorizeButton.setEnabled(false);
+    }
+
+    private void setEnableForm(){
+        addButton.setEnabled(true);
+        authorizeButton.setEnabled(true);
+    }
+
     private void disableFields() {
         table.getColumnModel().getColumn(0).setMinWidth(0);
         table.getColumnModel().getColumn(0).setMaxWidth(0);
         table.getColumnModel().getColumn(0).setWidth(0);
 
-        table.getColumnModel().getColumn(5).setMinWidth(0);
-        table.getColumnModel().getColumn(5).setMaxWidth(0);
-        table.getColumnModel().getColumn(5).setWidth(0);
-
         table.getColumnModel().getColumn(6).setMinWidth(0);
         table.getColumnModel().getColumn(6).setMaxWidth(0);
         table.getColumnModel().getColumn(6).setWidth(0);
+
+        table.getColumnModel().getColumn(7).setMinWidth(0);
+        table.getColumnModel().getColumn(7).setMaxWidth(0);
+        table.getColumnModel().getColumn(7).setWidth(0);
 
         isAuthorized = false;
         editButton.setEnabled(false);
@@ -167,9 +208,13 @@ public class TuningConfig extends  BaseConfig {
         table.getColumnModel().getColumn(3).setMaxWidth(200);
         table.getColumnModel().getColumn(3).setWidth(200);
 
-        table.getColumnModel().getColumn(4).setMinWidth(400);
-        table.getColumnModel().getColumn(4).setMaxWidth(400);
-        table.getColumnModel().getColumn(4).setWidth(400);
+        table.getColumnModel().getColumn(5).setMinWidth(400);
+        table.getColumnModel().getColumn(5).setMaxWidth(400);
+        table.getColumnModel().getColumn(5).setWidth(400);
+
+        table.getColumnModel().getColumn(4).setMinWidth(200);
+        table.getColumnModel().getColumn(4).setMaxWidth(200);
+        table.getColumnModel().getColumn(4).setWidth(200);
     }
 
     private void enableFields() {
@@ -177,13 +222,13 @@ public class TuningConfig extends  BaseConfig {
         table.getColumnModel().getColumn(0).setMaxWidth(50);
         table.getColumnModel().getColumn(0).setWidth(50);
 
-        table.getColumnModel().getColumn(5).setMinWidth(150);
-        table.getColumnModel().getColumn(5).setMaxWidth(150);
-        table.getColumnModel().getColumn(5).setWidth(150);
-
         table.getColumnModel().getColumn(6).setMinWidth(150);
         table.getColumnModel().getColumn(6).setMaxWidth(150);
         table.getColumnModel().getColumn(6).setWidth(150);
+
+        table.getColumnModel().getColumn(7).setMinWidth(150);
+        table.getColumnModel().getColumn(7).setMaxWidth(150);
+        table.getColumnModel().getColumn(7).setWidth(150);
 
         isAuthorized = true;
         editButton.setEnabled(true);
@@ -208,6 +253,10 @@ public class TuningConfig extends  BaseConfig {
         table.getColumnModel().getColumn(4).setMinWidth(200);
         table.getColumnModel().getColumn(4).setMaxWidth(200);
         table.getColumnModel().getColumn(4).setWidth(200);
+
+        table.getColumnModel().getColumn(5).setMinWidth(200);
+        table.getColumnModel().getColumn(5).setMaxWidth(200);
+        table.getColumnModel().getColumn(5).setWidth(200);
     }
 
     private void configureTablePanel(){
@@ -235,11 +284,16 @@ public class TuningConfig extends  BaseConfig {
         logoutButton.addActionListener(new LogoutAction());
     }
 
+    private void refreshAll() {
+        this.refreshCarCombo();
+        this.refreshTable();
+    }
+
     private void refreshTable() {
         conn = DBConnection.getConnection();
 
         try {
-            state = conn.prepareStatement("select id, name, brand, function, description, createdon, lastmodifiedon from tuning");
+            state = conn.prepareStatement("select t.id, c.Model AS Car, t.name, t.brand, t.function, t.description, t.createdon, t.lastmodifiedon from tuning t JOIN Car c ON c.ID = t.carid");
             result = state.executeQuery();
             table.setModel(new MyModel(result));
             if (!isAuthorized){
@@ -260,7 +314,7 @@ public class TuningConfig extends  BaseConfig {
         brandInput.setText("");
         functionInput.setText("");
         descriptionInput.setText("");
-
+        this.refreshCarCombo();
         selectedId = -1;
     }
 
@@ -277,10 +331,11 @@ public class TuningConfig extends  BaseConfig {
 
             int row=table.getSelectedRow();
             selectedId=Integer.parseInt(table.getValueAt(row, 0).toString());
-            nameInput.setText(table.getValueAt(row, 1).toString());
-            brandInput.setText(table.getValueAt(row, 2).toString());
-            functionInput.setText(table.getValueAt(row, 3).toString());
-            descriptionInput.setText(table.getValueAt(row, 4).toString());
+            nameInput.setText(table.getValueAt(row, 2).toString());
+            brandInput.setText(table.getValueAt(row, 3).toString());
+            functionInput.setText(table.getValueAt(row, 4).toString());
+            descriptionInput.setText(table.getValueAt(row, 5).toString());
+            carCombo.setSelectedItem(table.getValueAt(row, 1).toString());
         }
 
         @Override
@@ -311,8 +366,9 @@ public class TuningConfig extends  BaseConfig {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            int carId = getCarId(carCombo.getSelectedItem().toString());
             conn = DBConnection.getConnection();
-            String sql = "insert into tuning(name, brand, function, description, createdon, lastmodifiedon) values(?,?,?,?,?,?)";
+            String sql = "insert into tuning(name, brand, function, description, createdon, lastmodifiedon, carid) values(?,?,?,?,?,?,?)";
 
             try {
                 state = conn.prepareStatement(sql);
@@ -322,9 +378,10 @@ public class TuningConfig extends  BaseConfig {
                 state.setString(4, descriptionInput.getText());
                 state.setDate(5, new java.sql.Date(new java.util.Date().getTime()));
                 state.setDate(6, new java.sql.Date(new java.util.Date().getTime()));
+                state.setInt(7, carId);
 
                 state.execute();
-                refreshTable();
+                refreshAll();
                 clearForm();
 
             } catch (SQLException e1) {
@@ -334,12 +391,34 @@ public class TuningConfig extends  BaseConfig {
         }
     }
 
+    private int getCarId(String selectedCar) {
+        conn = DBConnection.getConnection();
+        String sql = "select id from car where model like ?";
+
+        try {
+            state = conn.prepareStatement(sql);
+            state.setString(1, selectedCar);
+
+            result = state.executeQuery();
+            while(result.next()) {
+                String id = result.getObject(1).toString();
+                return Integer.parseInt(id);
+            }
+
+        } catch (SQLException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+        return 0;
+    }
+
     private class AddRandomAction implements ActionListener{
 
         @Override
         public void actionPerformed(ActionEvent e) {
             conn = DBConnection.getConnection();
-            String sql = "insert into tuning(name, brand, function, description, createdon, lastmodifiedon) values(?,?,?,?,?,?)";
+            String sql = "insert into tuning(name, brand, function, description, createdon, lastmodifiedon, carid) values(?,?,?,?,?,?,?)";
 
             try {
                 state = conn.prepareStatement(sql);
@@ -349,9 +428,10 @@ public class TuningConfig extends  BaseConfig {
                 state.setString(4, "Help with " + generateRandomString(30));
                 state.setDate(5, new java.sql.Date(new java.util.Date().getTime()));
                 state.setDate(6, new java.sql.Date(new java.util.Date().getTime()));
+                state.setInt(7, 1);
 
                 state.execute();
-                refreshTable();
+                refreshAll();
 
             } catch (SQLException e1) {
                 // TODO Auto-generated catch block
@@ -364,8 +444,9 @@ public class TuningConfig extends  BaseConfig {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            int carId = getCarId(carCombo.getSelectedItem().toString());
             conn = DBConnection.getConnection();
-            String sql = "update tuning set name = ?, brand = ?, function = ?, description = ?, lastmodifiedon = ? where id = ?";
+            String sql = "update tuning set name = ?, brand = ?, function = ?, description = ?, lastmodifiedon = ?, carid = ? where id = ?";
 
             try {
                 state = conn.prepareStatement(sql);
@@ -374,10 +455,11 @@ public class TuningConfig extends  BaseConfig {
                 state.setString(3, functionInput.getText());
                 state.setString(4, descriptionInput.getText());
                 state.setDate(5, new java.sql.Date(new java.util.Date().getTime()));
-                state.setInt(6, selectedId);
+                state.setInt(6, carId);
+                state.setInt(7, selectedId);
 
                 state.execute();
-                refreshTable();
+                refreshAll();
                 selectedId = -1;
                 clearForm();
 
@@ -399,7 +481,7 @@ public class TuningConfig extends  BaseConfig {
                 state=conn.prepareStatement(sql);
                 state.setInt(1, selectedId);
                 state.execute();
-                refreshTable();
+                refreshAll();
                 clearForm();
                 selectedId=-1;
             } catch (SQLException e1) {
@@ -420,7 +502,7 @@ public class TuningConfig extends  BaseConfig {
             }
 
             conn=DBConnection.getConnection();
-            String sql="select id, name, brand, function, description, createdon, lastmodifiedon from tuning where name like ?";
+            String sql="select t.id, c.Model AS Car, t.name, t.brand, t.function, t.description, t.createdon, t.lastmodifiedon from tuning t JOIN Car c ON c.ID = t.carid where t.name like ?";
 
             try {
                 state=conn.prepareStatement(sql);
@@ -450,7 +532,7 @@ public class TuningConfig extends  BaseConfig {
             }
 
             conn=DBConnection.getConnection();
-            String sql="select id, name, brand, function, description, createdon, lastmodifiedon from tuning where brand like ?";
+            String sql="select t.id, c.Model AS Car, t.name, t.brand, t.function, t.description, t.createdon, t.lastmodifiedon from tuning t JOIN Car c ON c.ID = t.carid where t.brand like ?";
 
             try {
                 state=conn.prepareStatement(sql);
@@ -476,7 +558,7 @@ public class TuningConfig extends  BaseConfig {
         @Override
         public void actionPerformed(ActionEvent e) {
             conn=DBConnection.getConnection();
-            String sql="select id, name, brand, function, description, createdon, lastmodifiedon from tuning order by createdon desc";
+            String sql="select t.id, c.Model AS Car, t.name, t.brand, t.function, t.description, t.createdon, t.lastmodifiedon from tuning t JOIN Car c ON c.ID = t.carid order by t.createdon desc";
 
             try {
                 state=conn.prepareStatement(sql);
@@ -500,7 +582,7 @@ public class TuningConfig extends  BaseConfig {
         @Override
         public void actionPerformed(ActionEvent e) {
             conn=DBConnection.getConnection();
-            String sql="select id, name, brand, function, description, createdon, lastmodifiedon from tuning order by lastmodifiedon desc";
+            String sql="select t.id, c.Model AS Car, t.name, t.brand, t.function, t.description, t.createdon, t.lastmodifiedon from tuning t JOIN Car c ON c.ID = t.carid order by t.lastmodifiedon desc";
 
             try {
                 state=conn.prepareStatement(sql);
@@ -531,7 +613,7 @@ public class TuningConfig extends  BaseConfig {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            refreshTable();
+            refreshAll();
         }
     }
 
