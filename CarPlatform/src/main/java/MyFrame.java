@@ -23,10 +23,6 @@ import java.util.Random;
 import javax.swing.*;
 
 public class MyFrame extends JFrame {
-	Connection conn = null;
-	PreparedStatement state = null;
-	ResultSet result = null;
-
 	JTabbedPane mainTab = new JTabbedPane(JTabbedPane.TOP);
 
 	CarMakeConfig carMakeConfig = new CarMakeConfig(mainTab);
